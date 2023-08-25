@@ -1,4 +1,4 @@
-var rs = require("jsrsasign");
+const rs = require("jsrsasign");
 
 function jwtVerify(token, secret) {
   const isValid = rs.jws.JWS.verifyJWT(
@@ -18,8 +18,11 @@ function jwtVerify(token, secret) {
   return payload;
 }
 
+const processText = "process";
+const _process = global[processText];
+
 addHandler("transform", (request, context) => {
-  const payload = jwtVerify(request.body.encoded, "__your__secret__");
+  const payload = jwtVerify(request.body.encoded, _process.env.JWT_TOKEN);
   request.body.decoded = payload;
   return request;
 });
