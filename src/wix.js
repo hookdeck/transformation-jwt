@@ -29,6 +29,11 @@ const _process = global[processText];
 
 addHandler("transform", (request, context) => {
   const payload = jwtVerify(request.body, _process.env.PUBLIC_KEY);
-  request.body = payload.data;
+  const parsedPayload = JSON.parse(payload.data);
+  if (parsedPayload.data && typeof parsedPayload.data === "string") {
+    parsedPayload.data = JSON.parse(parsedPayload.data);
+  }
+  request.body = parsedPayload;
+  request.headers["content-type"] = "application/json";
   return request;
 });
