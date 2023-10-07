@@ -1,12 +1,14 @@
+const { KEYUTIL } = require("jsrsasign");
 const rs = require("jsrsasign");
 
 function jwtVerify(token, secret) {
-  const isValid = rs.jws.JWS.verifyJWT(
+
+  const k = KEYUTIL.getKey(secret);
+  const isValid = rs.jws.JWS.verify(
     token,
-    Buffer.from(secret, "utf8").toString("hex"),
+    k,
     {
-      alg: ["HS256"],
-      verifyAt: rs.jws.IntDate.get("now"),
+      alg: ["RS256"],
     }
   );
 
@@ -18,11 +20,17 @@ function jwtVerify(token, secret) {
   return payload;
 }
 
-const processText = "process";
-const _process = global[processText];
-
 addHandler("transform", (request, context) => {
-  const payload = jwtVerify(request.body.encoded, _process.env.JWT_TOKEN);
-  request.body.decoded = payload;
+  const jwt_secret = process.env.JWT_SECRET;
+
+  const payload = jwtVerify(request.body, jwt_secret);
+
+  request.headers['content-type'] = 'application/json';
+
+  request.body = {};
+  if(payload) {
+    request.body = JSON.parse(JSON.parse(payload.data).data);
+  }
+
   return request;
 });
